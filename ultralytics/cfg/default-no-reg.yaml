@@ -51,7 +51,7 @@ split: val # Dataset split to use for validation (e.g., 'val', 'test', 'train')
 save_json: False # Save results in JSON format
 save_hybrid: False # Save a hybrid version of labels (labels + additional predictions)
 conf: 0.25 # Confidence threshold for detections
-iou: 0.7 # IoU threshold for NMS
+iou: 0.65 # IoU threshold for NMS
 max_det: 300 # Maximum detections per image
 half: False # Use half precision for inference (FP16)
 dnn: False # Use OpenCV DNN for ONNX inference
