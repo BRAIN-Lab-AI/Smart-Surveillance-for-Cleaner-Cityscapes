@@ -1,0 +1,130 @@
+# Ultralytics 🚀 AGPL-3.0 License - https://ultralytics.com/license
+
+# Global configuration YAML with settings and hyperparameters for YOLO training, validation, prediction and export
+# For documentation see https://docs.ultralytics.com/usage/cfg/
+
+task: detect # YOLO task: detect, segment, classify, etc.
+mode: train # YOLO mode: train, val, predict, etc.
+
+# Train settings -------------------------------------------------------------------------------------------------------
+model: # (Optional) Specify the model file (e.g., yolov8n.pt)
+data: 'urbanEye.yaml' # Path to your dataset configuration file
+epochs: 100 # Number of training epochs
+time: # Optional: Number of training hours (overrides epochs)
+patience: 30 # Early stopping patience (epochs with no improvement)
+batch: 100 # Number of images per batch
+imgsz: 640 # Input image size (single int or [h, w])
+save: True # Save checkpoints and prediction results
+save_period: -1 # Checkpoint save interval (disabled if < 1)
+cache: ram # Use RAM for caching data (ram, disk, or False)
+device: 0 # Device to use (e.g., cuda:0)
+workers: 32 # Number of data loading workers
+project: DL504 # (Optional) Project name for saving experiments
+name: # (Optional) Experiment name
+exist_ok: False # Whether to overwrite an existing experiment directory
+pretrained: True # Use a pretrained model or provide a weights file
+optimizer: auto # Optimizer to use (auto selects among available ones)
+verbose: True # Whether to print detailed output
+seed: 0 # Random seed for reproducibility
+deterministic: True # Enable deterministic mode
+single_cls: False # Train multi-class data as single-class if True
+rect: False # Use rectangular training/padding
+cos_lr: True # Use cosine learning rate scheduling
+close_mosaic: 10 # Disable mosaic augmentation for final epochs (0 to disable)
+resume: False # Resume training from last checkpoint
+amp: True # Use Automatic Mixed Precision (AMP)
+fraction: 1.0 # Use fraction of dataset (default 1.0, all images)
+profile: False # Profile model export speeds (ONNX/TensorRT)
+freeze: None # Freeze first n layers or list of layers during training
+multi_scale: True # Use multi-scale training
+
+# Segmentation-specific settings
+overlap_mask: True # Merge object masks (for segmentation training)
+mask_ratio: 4 # Mask downsample ratio
+
+# Classification-specific settings
+dropout: 0.0 # Dropout rate (already disabled)
+
+# Val/Test settings ----------------------------------------------------------------------------------------------------
+val: True # Validate/test during training
+split: val # Dataset split to use for validation (e.g., 'val', 'test', 'train')
+save_json: False # Save results in JSON format
+save_hybrid: False # Save a hybrid version of labels (labels + additional predictions)
+conf: 0.25 # Confidence threshold for detections
+iou: 0.7 # IoU threshold for NMS
+max_det: 300 # Maximum detections per image
+half: False # Use half precision for inference (FP16)
+dnn: False # Use OpenCV DNN for ONNX inference
+plots: True # Save plots/images during validation
+
+# Predict settings -----------------------------------------------------------------------------------------------------
+source: # (Optional) Source directory for images or videos
+vid_stride: 1 # Video frame rate stride
+stream_buffer: False # Buffer streaming frames or return the most recent one
+visualize: False # Visualize model features during prediction
+augment: False # Apply augmentations during prediction
+agnostic_nms: False # Use class-agnostic NMS
+classes: # (Optional) Filter detection results by class (e.g., 0 or [0,2,3])
+retina_masks: False # Use high-resolution segmentation masks
+embed: # (Optional) Return feature vectors/embeddings from specific layers
+
+# Visualize settings ---------------------------------------------------------------------------------------------------
+show: False # Display predicted images/videos if supported
+save_frames: False # Save individual video frames
+save_txt: False # Save results as text files
+save_conf: False # Save results with confidence scores
+save_crop: False # Save cropped images with predictions
+show_labels: True # Display prediction labels
+show_conf: True # Display confidence scores on predictions
+show_boxes: True # Display bounding boxes for detections
+line_width: # (Optional) Line width of bounding boxes
+
+# Export settings ------------------------------------------------------------------------------------------------------
+format: torchscript # Export format (e.g., torchscript, ONNX, etc.)
+keras: False # Use Keras (if applicable)
+optimize: False # Optimize model for mobile (if applicable)
+int8: False # Enable INT8 quantization (for CoreML/TF)
+dynamic: False # Set dynamic axes for ONNX/TensorRT exports
+simplify: True # Simplify ONNX model graph using `onnxslim`
+opset: # (Optional) ONNX opset version
+workspace: 0 # (Optional) TensorRT workspace size (GiB)
+nms: False # (For CoreML) Include an NMS layer
+
+# Hyperparameters ------------------------------------------------------------------------------------------------------
+lr0: 0.001 # Initial learning rate (e.g., for Adam)
+lrf: 0.01 # Final learning rate factor (final_lr = lr0 * lrf)
+momentum: 0.937 # Momentum for SGD or beta1 for Adam
+weight_decay: 0.0 # Disable L2 regularization by setting weight decay to 0.0
+warmup_epochs: 3.0 # Number of warmup epochs
+warmup_momentum: 0.8 # Initial momentum during warmup
+warmup_bias_lr: 0.1 # Initial bias learning rate during warmup
+box: 7.5 # Box loss gain
+cls: 0.5 # Class loss gain (scaled by pixels)
+dfl: 1.5 # Distribution focal loss gain
+pose: 12.0 # Pose loss gain
+kobj: 1.0 # Keypoint object loss gain
+nbs: 64 # Nominal batch size for scaling hyperparameters
+hsv_h: 0.015 # HSV-Hue augmentation fraction
+hsv_s: 0.7 # HSV-Saturation augmentation fraction
+hsv_v: 0.4 # HSV-Value augmentation fraction
+degrees: 0.0 # Rotation augmentation (degrees)
+translate: 0.0 # Disable translation augmentation
+scale: 0.0 # Disable scaling augmentation
+shear: 0.0 # Shear augmentation (degrees)
+perspective: 0.0 # Perspective augmentation (fraction)
+flipud: 0.0 # Vertical flip probability
+fliplr: 0.0 # Disable horizontal flip augmentation
+bgr: 0.0 # Channel swap probability (if needed)
+mosaic: 0.0 # Disable mosaic augmentation
+mixup: 0.0 # Mixup remains disabled
+copy_paste: 0.0 # Disable copy-paste augmentation
+copy_paste_mode: "flip" # (Retain method if ever enabled; no effect if copy_paste is 0)
+auto_augment: none # Disable auto augmentation policy
+erasing: 0.0 # Disable random erasing augmentation
+crop_fraction: 1.0 # No cropping; use full image
+
+# Custom config.yaml ---------------------------------------------------------------------------------------------------
+cfg: # (Optional) Override defaults via an external config file
+
+# Tracker settings -----------------------------------------------------------------------------------------------------
+tracker: botsort.yaml # Tracker type for video object tracking (if applicable)
