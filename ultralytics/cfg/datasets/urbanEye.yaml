@@ -1,0 +1,29 @@
+# YOLOv5 🚀 by Ultralytics, GPL-3.0 license
+# COCO128 dataset https://www.kaggle.com/ultralytics/coco128 (first 128 images from COCO train2017) by Ultralytics
+# Example usage: python train.py --data coco128.yaml
+# parent
+# ├── Smartathon scripts
+# └── datasets
+
+# Train/val/test sets as 1) dir: path/to/imgs, 2) file: path/to/imgs.txt, or 3) list: [path/to/imgs1, path/to/imgs2, ..]
+path: ../datasets/smartathon/track1/images  # dataset root dir
+train: train  # train images (relative to 'path') 128 images
+val: eval  # val images (relative to 'path') 128 images
+test: test # test images (optional)
+
+# Classes
+names:
+  0: GRAFFITI
+  1: FADED_SIGNAGE
+  2: POTHOLES
+  3: GARBAGE
+  4: CONSTRUCTION_ROAD
+  5: BROKEN_SIGNAGE
+  6: BAD_STREETLIGHT
+  7: BAD_BILLBOARD
+  8: SAND_ON_ROAD
+  9: CLUTTER_SIDEWALK
+  10: UNKEPT_FACADE
+
+# Download script/URL (optional)
+#download: https://ultralytics.com/assets/coco128.zip
