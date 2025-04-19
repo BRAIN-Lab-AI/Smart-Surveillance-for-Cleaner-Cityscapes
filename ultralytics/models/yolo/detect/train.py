@@ -82,6 +82,10 @@ class DetectionTrainer(BaseTrainer):
         self.model.names = self.data["names"]  # attach class names to model
         self.model.args = self.args  # attach hyperparameters to model
         # TODO: self.model.class_weights = labels_to_class_weights(dataset.labels, nc).to(device) * nc
+        #DL504
+        self.model.class_weights = self.data.get("class_weights")
+        LOGGER.info(f"Class Weights in Use: {getattr(self.model, 'class_weights', None)}")
+        #DL504
 
     def get_model(self, cfg=None, weights=None, verbose=True):
         """Return a YOLO detection model."""

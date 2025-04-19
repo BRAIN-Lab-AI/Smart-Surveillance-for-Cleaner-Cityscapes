@@ -10,6 +10,7 @@ from .dataset import (
     YOLODataset,
     YOLOMultiModalDataset,
 )
+from .balance_utils import build_balanced_dataloader
 
 __all__ = (
     "BaseDataset",
@@ -23,4 +24,5 @@ __all__ = (
     "build_grounding",
     "build_dataloader",
     "load_inference_source",
+    "build_balanced_dataloader",
 )

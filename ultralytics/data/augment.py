@@ -1698,6 +1698,39 @@ class CopyPaste(BaseMixTransform):
         labels.pop("mix_labels", None)
         return labels
 
+    # def _transform(self, labels1, labels2={}):
+    #     """Applies Copy-Paste augmentation to combine objects from another image into the current image."""
+    #     im = labels1["img"]
+    #     cls = labels1["cls"]
+    #     h, w = im.shape[:2]
+    #     instances = labels1.pop("instances")
+    #     instances.convert_bbox(format="xyxy")
+    #     instances.denormalize(w, h)
+
+    #     im_new = np.zeros(im.shape, np.uint8)
+    #     instances2 = labels2.pop("instances", None)
+    #     if instances2 is None:
+    #         instances2 = deepcopy(instances)
+    #         instances2.fliplr(w)
+    #     ioa = bbox_ioa(instances2.bboxes, instances.bboxes)  # intersection over area, (N, M)
+    #     indexes = np.nonzero((ioa < 0.30).all(1))[0]  # (N, )
+    #     n = len(indexes)
+    #     sorted_idx = np.argsort(ioa.max(1)[indexes])
+    #     indexes = indexes[sorted_idx]
+    #     for j in indexes[: round(self.p * n)]:
+    #         cls = np.concatenate((cls, labels2.get("cls", cls)[[j]]), axis=0)
+    #         instances = Instances.concatenate((instances, instances2[[j]]), axis=0)
+    #         cv2.drawContours(im_new, instances2.segments[[j]].astype(np.int32), -1, (1, 1, 1), cv2.FILLED)
+
+    #     result = labels2.get("img", cv2.flip(im, 1))  # augment segments
+    #     i = im_new.astype(bool)
+    #     im[i] = result[i]
+
+    #     labels1["img"] = im
+    #     labels1["cls"] = cls
+    #     labels1["instances"] = instances
+    #     return labels1
+    #--DL504
     def _transform(self, labels1, labels2={}):
         """Applies Copy-Paste augmentation to combine objects from another image into the current image."""
         im = labels1["img"]
@@ -1712,25 +1745,61 @@ class CopyPaste(BaseMixTransform):
         if instances2 is None:
             instances2 = deepcopy(instances)
             instances2.fliplr(w)
-        ioa = bbox_ioa(instances2.bboxes, instances.bboxes)  # intersection over area, (N, M)
-        indexes = np.nonzero((ioa < 0.30).all(1))[0]  # (N, )
-        n = len(indexes)
-        sorted_idx = np.argsort(ioa.max(1)[indexes])
-        indexes = indexes[sorted_idx]
-        for j in indexes[: round(self.p * n)]:
+        # Rare classes to prioritize
+        rare_class_ids = {1, 5, 9}  # FADED_SIGNAGE, BROKEN_SIGNAGE, CLUTTER_SIDEWALK
+
+        # Compute Intersection over Area to avoid duplicate objects
+        ioa = bbox_ioa(instances2.bboxes, instances.bboxes)  # shape (N, M)
+        valid_idxs = np.nonzero((ioa < 0.30).all(1))[0]  # low-overlap indices
+
+        # Prioritize rare class objects
+        cls2 = labels2.get("cls", cls)[valid_idxs].squeeze(-1)
+        priority = np.array([10 if int(c) in rare_class_ids else 1 for c in cls2])
+        sorted_idx = valid_idxs[np.argsort(-priority)]  # sort descending by priority
+
+        # Paste a proportion of valid objects
+        paste_count = round(self.p * len(sorted_idx))
+        selected_idxs = sorted_idx[:paste_count]
+
+        from ultralytics.utils import LOGGER
+        rare_paste_count = sum(int(cls2[i]) in rare_class_ids for i in range(paste_count))
+        LOGGER.info(f"🩹 CopyPaste inserted {rare_paste_count}/{paste_count} rare-class objects.")
+
+        # Copy selected objects into the image
+        for j in selected_idxs:
             cls = np.concatenate((cls, labels2.get("cls", cls)[[j]]), axis=0)
             instances = Instances.concatenate((instances, instances2[[j]]), axis=0)
             cv2.drawContours(im_new, instances2.segments[[j]].astype(np.int32), -1, (1, 1, 1), cv2.FILLED)
 
-        result = labels2.get("img", cv2.flip(im, 1))  # augment segments
+        # Merge copied-in regions from source image
+        result = labels2.get("img", cv2.flip(im, 1))  # fallback to flipped input
         i = im_new.astype(bool)
         im[i] = result[i]
 
         labels1["img"] = im
         labels1["cls"] = cls
         labels1["instances"] = instances
-        return labels1
 
+        import os
+        from ultralytics.utils.plotting import Annotator
+        from ultralytics.utils.files import increment_path
+
+        if random.random() < 0.05:  # visualize 5% of time
+            save_dir = increment_path("runs/copypaste-debug", exist_ok=True)
+            save_dir.mkdir(parents=True, exist_ok=True)
+
+            img = im.copy()
+            annotator = Annotator(img, line_width=2)
+            instances.convert_bbox("xyxy")
+            for i, box in enumerate(instances.bboxes):
+                label_id = int(cls[i])
+                color = (0, 255, 0) if label_id in rare_class_ids else (255, 0, 0)
+                annotator.box_label(box, f"cls {label_id}", color=color)
+
+            out_path = save_dir / f"copypaste_{random.randint(0,99999)}.jpg"
+            cv2.imwrite(str(out_path), annotator.result())
+        return labels1
+    #--DL504
 
 class Albumentations:
     """
@@ -2299,7 +2368,17 @@ def v8_transforms(dataset, imgsz, hyp, stretch=False):
         >>> transforms = v8_transforms(dataset, imgsz=640, hyp=hyp)
         >>> augmented_data = transforms(dataset[0])
     """
-    mosaic = Mosaic(dataset, imgsz=imgsz, p=hyp.mosaic)
+
+    # Identify synthetic image by path marker
+    is_synthetic = "synthetic" in str(dataset.img_path).lower()
+
+    # Disable strong augmentation if synthetic
+    mosaic_p = 0.0 if is_synthetic else hyp.mosaic
+    mixup_p = 0.0 if is_synthetic else hyp.mixup
+    copypaste_p = 0.0 if is_synthetic else hyp.copy_paste
+
+
+    mosaic = Mosaic(dataset, imgsz=imgsz, p=mosaic_p)
     affine = RandomPerspective(
         degrees=hyp.degrees,
         translate=hyp.translate,
@@ -2311,16 +2390,17 @@ def v8_transforms(dataset, imgsz, hyp, stretch=False):
 
     pre_transform = Compose([mosaic, affine])
     if hyp.copy_paste_mode == "flip":
-        pre_transform.insert(1, CopyPaste(p=hyp.copy_paste, mode=hyp.copy_paste_mode))
+        pre_transform.insert(1, CopyPaste(p=copypaste_p, mode=hyp.copy_paste_mode))
     else:
         pre_transform.append(
             CopyPaste(
                 dataset,
-                pre_transform=Compose([Mosaic(dataset, imgsz=imgsz, p=hyp.mosaic), affine]),
-                p=hyp.copy_paste,
+                pre_transform=Compose([Mosaic(dataset, imgsz=imgsz, p=mosaic_p), affine]),
+                p=copypaste_p,
                 mode=hyp.copy_paste_mode,
             )
         )
+
     flip_idx = dataset.data.get("flip_idx", [])  # for keypoints augmentation
     if dataset.use_keypoints:
         kpt_shape = dataset.data.get("kpt_shape", None)
@@ -2330,17 +2410,155 @@ def v8_transforms(dataset, imgsz, hyp, stretch=False):
         elif flip_idx and (len(flip_idx) != kpt_shape[0]):
             raise ValueError(f"data.yaml flip_idx={flip_idx} length must be equal to kpt_shape[0]={kpt_shape[0]}")
 
+    #--DL504---------
+    # rare_class_ids = {1, 5, 9}  # FADED_SIGNAGE, BROKEN_SIGNAGE, CLUTTER_SIDEWALK
+
+    # # Regular transforms
+    # regular_tfm = Compose([
+    #     MixUp(dataset, pre_transform=pre_transform, p=hyp.mixup),
+    #     Albumentations(p=1.0),
+    #     RandomHSV(hgain=hyp.hsv_h, sgain=hyp.hsv_s, vgain=hyp.hsv_v),
+    #     RandomFlip(direction="vertical", p=hyp.flipud),
+    #     RandomFlip(direction="horizontal", p=hyp.fliplr, flip_idx=flip_idx),
+    # ])
+
+    # # Strong transforms for rare-class images
+    # strong_tfm = Compose([
+    #     MixUp(dataset, pre_transform=pre_transform, p=min(hyp.mixup * 1.5, 1.0)),
+    #     Albumentations(p=1.0),
+    #     RandomHSV(hgain=hyp.hsv_h * 1.5, sgain=hyp.hsv_s * 1.5, vgain=hyp.hsv_v * 1.5),
+    #     RandomFlip(direction="vertical", p=min(hyp.flipud * 1.5, 1.0)),
+    #     RandomFlip(direction="horizontal", p=min(hyp.fliplr * 1.5, 1.0), flip_idx=flip_idx),
+    # ])
+
+    # # Compose full pipeline
+    # return Compose([
+    #     pre_transform,
+    #     ConditionalAugment(regular_tfm, strong_tfm, rare_class_ids),
+    # ])
+    #--DL504---------
+    
     return Compose(
         [
             pre_transform,
-            MixUp(dataset, pre_transform=pre_transform, p=hyp.mixup),
+            MixUp(dataset, pre_transform=pre_transform, p=mixup_p),
             Albumentations(p=1.0),
             RandomHSV(hgain=hyp.hsv_h, sgain=hyp.hsv_s, vgain=hyp.hsv_v),
             RandomFlip(direction="vertical", p=hyp.flipud),
             RandomFlip(direction="horizontal", p=hyp.fliplr, flip_idx=flip_idx),
         ]
     )  # transforms
+#--DL504---------
+class ConditionalAugment:
+    """
+    Dynamically selects between regular and strong augmentations based on class labels.
+    """
+    def __init__(self, regular_tfm, strong_tfm, rare_class_ids):
+        self.regular_tfm = regular_tfm
+        self.strong_tfm = strong_tfm
+        self.rare_class_ids = rare_class_ids
 
+    def __call__(self, labels):
+        cls = labels.get("cls")
+        if cls is not None and any(int(c.item()) in self.rare_class_ids for c in cls):
+            LOGGER.info("🔁 Applied strong augment for minority class")
+            return self.strong_tfm(labels)
+        else:
+            return self.regular_tfm(labels)
+#--DL504---------
+# def v8_transforms(dataset, imgsz, hyp, stretch=False):
+#     """
+#     Applies a series of image transformations for training.
+
+#     This function creates a composition of image augmentation techniques to prepare images for YOLO training.
+#     It includes operations such as mosaic, copy-paste, random perspective, mixup, and various color adjustments.
+
+#     Args:
+#         dataset (Dataset): The dataset object containing image data and annotations.
+#         imgsz (int): The target image size for resizing.
+#         hyp (Namespace): A dictionary of hyperparameters controlling various aspects of the transformations.
+#         stretch (bool): If True, applies stretching to the image. If False, uses LetterBox resizing.
+
+#     Returns:
+#         (Compose): A composition of image transformations to be applied to the dataset.
+
+#     Examples:
+#         >>> from ultralytics.data.dataset import YOLODataset
+#         >>> from ultralytics.utils import IterableSimpleNamespace
+#         >>> dataset = YOLODataset(img_path="path/to/images", imgsz=640)
+#         >>> hyp = IterableSimpleNamespace(mosaic=1.0, copy_paste=0.5, degrees=10.0, translate=0.2, scale=0.9)
+#         >>> transforms = v8_transforms(dataset, imgsz=640, hyp=hyp)
+#         >>> augmented_data = transforms(dataset[0])
+#     """
+#     mosaic = Mosaic(dataset, imgsz=imgsz, p=hyp.mosaic)
+#     affine = RandomPerspective(
+#         degrees=hyp.degrees,
+#         translate=hyp.translate,
+#         scale=hyp.scale,
+#         shear=hyp.shear,
+#         perspective=hyp.perspective,
+#         pre_transform=None if stretch else LetterBox(new_shape=(imgsz, imgsz)),
+#     )
+
+#     pre_transform = Compose([mosaic, affine])
+#     if hyp.copy_paste_mode == "flip":
+#         pre_transform.insert(1, CopyPaste(p=hyp.copy_paste, mode=hyp.copy_paste_mode))
+#     else:
+#         pre_transform.append(
+#             CopyPaste(
+#                 dataset,
+#                 pre_transform=Compose([Mosaic(dataset, imgsz=imgsz, p=hyp.mosaic), affine]),
+#                 p=hyp.copy_paste,
+#                 mode=hyp.copy_paste_mode,
+#             )
+#         )
+#     flip_idx = dataset.data.get("flip_idx", [])  # for keypoints augmentation
+#     if dataset.use_keypoints:
+#         kpt_shape = dataset.data.get("kpt_shape", None)
+#         if len(flip_idx) == 0 and hyp.fliplr > 0.0:
+#             hyp.fliplr = 0.0
+#             LOGGER.warning("WARNING ⚠️ No 'flip_idx' array defined in data.yaml, setting augmentation 'fliplr=0.0'")
+#         elif flip_idx and (len(flip_idx) != kpt_shape[0]):
+#             raise ValueError(f"data.yaml flip_idx={flip_idx} length must be equal to kpt_shape[0]={kpt_shape[0]}")
+
+#     #--DL504---------
+#     # rare_class_ids = {1, 5, 9}  # FADED_SIGNAGE, BROKEN_SIGNAGE, CLUTTER_SIDEWALK
+
+#     # # Regular transforms
+#     # regular_tfm = Compose([
+#     #     MixUp(dataset, pre_transform=pre_transform, p=hyp.mixup),
+#     #     Albumentations(p=1.0),
+#     #     RandomHSV(hgain=hyp.hsv_h, sgain=hyp.hsv_s, vgain=hyp.hsv_v),
+#     #     RandomFlip(direction="vertical", p=hyp.flipud),
+#     #     RandomFlip(direction="horizontal", p=hyp.fliplr, flip_idx=flip_idx),
+#     # ])
+
+#     # # Strong transforms for rare-class images
+#     # strong_tfm = Compose([
+#     #     MixUp(dataset, pre_transform=pre_transform, p=min(hyp.mixup * 1.5, 1.0)),
+#     #     Albumentations(p=1.0),
+#     #     RandomHSV(hgain=hyp.hsv_h * 1.5, sgain=hyp.hsv_s * 1.5, vgain=hyp.hsv_v * 1.5),
+#     #     RandomFlip(direction="vertical", p=min(hyp.flipud * 1.5, 1.0)),
+#     #     RandomFlip(direction="horizontal", p=min(hyp.fliplr * 1.5, 1.0), flip_idx=flip_idx),
+#     # ])
+
+#     # # Compose full pipeline
+#     # return Compose([
+#     #     pre_transform,
+#     #     ConditionalAugment(regular_tfm, strong_tfm, rare_class_ids),
+#     # ])
+#     #--DL504---------
+    
+#     return Compose(
+#         [
+#             pre_transform,
+#             MixUp(dataset, pre_transform=pre_transform, p=hyp.mixup),
+#             Albumentations(p=1.0),
+#             RandomHSV(hgain=hyp.hsv_h, sgain=hyp.hsv_s, vgain=hyp.hsv_v),
+#             RandomFlip(direction="vertical", p=hyp.flipud),
+#             RandomFlip(direction="horizontal", p=hyp.fliplr, flip_idx=flip_idx),
+#         ]
+#     )  # transforms
 
 # Classification augmentations -----------------------------------------------------------------------------------------
 def classify_transforms(

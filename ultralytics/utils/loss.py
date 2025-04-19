@@ -172,10 +172,14 @@ class v8DetectionLoss:
         self.device = device
 
         self.use_dfl = m.reg_max > 1
-
+        #DL504
+        self.class_weights = getattr(model, 'class_weights', None)
+        #DL504
         self.assigner = TaskAlignedAssigner(topk=tal_topk, num_classes=self.nc, alpha=0.5, beta=6.0)
         self.bbox_loss = BboxLoss(m.reg_max).to(device)
         self.proj = torch.arange(m.reg_max, dtype=torch.float, device=device)
+
+        
 
     def preprocess(self, targets, batch_size, scale_tensor):
         """Preprocesses the target counts and matches with the input batch size to output a tensor."""
@@ -244,8 +248,17 @@ class v8DetectionLoss:
 
         # Cls loss
         # loss[1] = self.varifocal_loss(pred_scores, target_scores, target_labels) / target_scores_sum  # VFL way
-        loss[1] = self.bce(pred_scores, target_scores.to(dtype)).sum() / target_scores_sum  # BCE
-
+        
+        # loss[1] = self.bce(pred_scores, target_scores.to(dtype)).sum() / target_scores_sum  # BCE
+        #--DL504
+        if self.class_weights is not None:
+            class_w = torch.tensor(self.class_weights, device=self.device)
+            weight = class_w[torch.argmax(target_scores, dim=-1)]
+            bce = self.bce(pred_scores, target_scores.to(dtype)) * weight.unsqueeze(-1)
+            loss[1] = bce.sum() / target_scores_sum
+        else:
+            loss[1] = self.bce(pred_scores, target_scores.to(dtype)).sum() / target_scores_sum
+        #--DL504
         # Bbox loss
         if fg_mask.sum():
             target_bboxes /= stride_tensor
