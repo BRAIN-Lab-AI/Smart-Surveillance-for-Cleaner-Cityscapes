@@ -35,5 +35,5 @@ names:
 #download: https://ultralytics.com/assets/coco128.zip
 
 # Class weights for training (inverse of frequency)
-class_weights: [1.113, 1.2724, 0.7967, 0.4402, 0.7812, 1.2749, 0.0, 1.0351, 1.1652, 0.8599, 1.2614]
+class_weights: [0.6521, 2.1134, 0.4267, 0.2358, 0.4184, 2.3996, 0.0, 0.5544, 0.7993, 0.4606, 1.9399]
 
