@@ -145,11 +145,11 @@ dmypy.json
 runs/
 wandb/
 .DS_Store
-
+dvcline/
 # Neural Network weights -----------------------------------------------------------------------------------------------
-weights/
+# weights/
 *.weights
-*.pt
+# *.pt
 *.pb
 *.onnx
 *.engine
@@ -173,4 +173,5 @@ pnnx*
 
 # calibration image
 calibration_*.npy
-*.pt
+# *.pt
+dvclive/*
