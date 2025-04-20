@@ -1,7 +1,7 @@
 task: detect
 mode: train
-model: DL504/train36/weights/last.pt
-data: /workspace/projects/UrbanEye-scripts-v11/ultralytics/cfg/datasets/urbanEye.yaml
+model: yolo11l.pt
+data: urbanEye-no-Synth.yaml
 epochs: 500
 time: null
 patience: 30
@@ -13,7 +13,7 @@ cache: ram
 device: 0
 workers: 32
 project: DL504
-name: train36
+name: train38
 exist_ok: false
 pretrained: true
 optimizer: auto
@@ -24,7 +24,7 @@ single_cls: false
 rect: true
 cos_lr: true
 close_mosaic: 10
-resume: DL504/train36/weights/last.pt
+resume: false
 amp: true
 fraction: 1.0
 profile: false
@@ -76,7 +76,7 @@ momentum: 0.937
 weight_decay: 0.0005
 warmup_epochs: 3.0
 warmup_momentum: 0.8
-warmup_bias_lr: 0.0
+warmup_bias_lr: 0.1
 box: 7.5
 cls: 0.5
 dfl: 1.5
@@ -94,8 +94,8 @@ perspective: 0.0
 flipud: 0.0
 fliplr: 0.5
 bgr: 0.0
-mosaic: 0.0
-mixup: 0.0
+mosaic: 1.0
+mixup: 0.05
 copy_paste: 0.1
 copy_paste_mode: flip
 auto_augment: randaugment
@@ -103,4 +103,4 @@ erasing: 0.4
 crop_fraction: 1.0
 cfg: cfg/urbanyet-settings.yaml
 tracker: botsort.yaml
-save_dir: DL504/train36
+save_dir: DL504/train38

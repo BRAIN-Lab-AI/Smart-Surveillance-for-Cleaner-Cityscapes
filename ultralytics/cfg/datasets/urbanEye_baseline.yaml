@@ -7,6 +7,7 @@
 
 # Train/val/test sets as 1) dir: path/to/imgs, 2) file: path/to/imgs.txt, or 3) list: [path/to/imgs1, path/to/imgs2, ..]
 path: ../datasets/urbanEye/dataset  # dataset root dir
+
 train: images/train
 val: images/eval
 test: images/test
@@ -31,6 +32,4 @@ names:
 # Download script/URL (optional)
 #download: https://ultralytics.com/assets/coco128.zip
 
-# Class weights for training (inverse of frequency)
-class_weights: [0.6521, 2.1134, 0.4267, 0.2358, 0.4184, 2.3996, 0.0, 0.5544, 0.7993, 0.4606, 1.9399]
 
