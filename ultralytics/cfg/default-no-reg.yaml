@@ -5,13 +5,13 @@ task: detect
 mode: train
 
 # Train settings
-model: yolov11l.yaml
-data: data/urbanEye_baseline.yaml
+model: 
+data: 
 epochs: 100
 batch: 100
 imgsz: 640
 save: True
-cache: ram
+cache: disk
 device: 0
 workers: 32
 project: DL504
