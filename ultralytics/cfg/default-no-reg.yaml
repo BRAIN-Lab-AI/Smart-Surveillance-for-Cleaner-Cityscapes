@@ -5,7 +5,7 @@ task: detect
 mode: train
 
 # Train settings
-model: yolov11s.yaml
+model: yolov11l.yaml
 data: data/urbanEye_baseline.yaml
 epochs: 100
 batch: 100
