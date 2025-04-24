@@ -15,6 +15,9 @@ from ultralytics.utils import LOGGER, RANK
 from ultralytics.utils.plotting import plot_images, plot_labels, plot_results
 from ultralytics.utils.torch_utils import de_parallel, torch_distributed_zero_first
 
+#DL504
+from torch.utils.data import WeightedRandomSampler, DataLoader
+#DL504
 
 class DetectionTrainer(BaseTrainer):
     """
@@ -47,12 +50,59 @@ class DetectionTrainer(BaseTrainer):
         assert mode in {"train", "val"}, f"Mode must be 'train' or 'val', not {mode}."
         with torch_distributed_zero_first(rank):  # init dataset *.cache only once if DDP
             dataset = self.build_dataset(dataset_path, mode, batch_size)
-        shuffle = mode == "train"
-        if getattr(dataset, "rect", False) and shuffle:
-            LOGGER.warning("WARNING ⚠️ 'rect=True' is incompatible with DataLoader shuffle, setting shuffle=False")
-            shuffle = False
+        # use_weightedSampler = getattr(self.args, "use_weighted_random_sampler", False)
+        use_weightedSampler = self.data.get("use_weighted_random_sampler", False)#DL504
+        if not use_weightedSampler:#DL504
+            shuffle = mode == "train"
+            if getattr(dataset, "rect", False) and shuffle:
+                LOGGER.warning("WARNING ⚠️ 'rect=True' is incompatible with DataLoader shuffle, setting shuffle=False")
+                shuffle = False
+            workers = self.args.workers if mode == "train" else self.args.workers * 2
+            return build_dataloader(dataset, batch_size, workers, shuffle, rank)  # return dataloader
+        LOGGER.warning("WARNING ⚠️ just to tell now using new update of dataloader with WeightedRandomSampler")
+        #DL504
         workers = self.args.workers if mode == "train" else self.args.workers * 2
-        return build_dataloader(dataset, batch_size, workers, shuffle, rank)  # return dataloader
+
+        # --- Oversample minority‐class images when training via a WeightedRandomSampler ---
+        if mode == "train":
+            # compute per-class counts
+            # all_cls = np.concatenate([lb["cls"].squeeze(-1) for lb in dataset.labels]).astype(int)
+            # #all_cls = np.round(np.concatenate([lb["cls"].squeeze(-1) for lb in dataset.labels])).astype(int)
+            # class_counts = np.bincount(all_cls, minlength=self.data["nc"]).astype(float)
+
+            all_cls = np.concatenate([lb["cls"].squeeze(-1) for lb in dataset.labels])  # float32
+            #LOGGER.info(f" all_cls dtype before bincount = {all_cls.dtype}, unique values = {np.unique(all_cls)}")
+            all_cls_int = np.asarray(all_cls, dtype=np.int64)
+            class_counts = np.bincount(all_cls_int, minlength=self.data["nc"]).astype(float)
+
+            median_count = np.median(class_counts[class_counts>0])
+            max_ratio = float(self.data.get("oversample_max_ratio", 5.0))
+
+            image_weights = []
+            for lb in dataset.labels:
+                cls_idxs = lb["cls"].squeeze(-1).astype(np.int64).tolist()
+                if not cls_idxs:
+                    image_weights.append(1.0)
+                else:
+                    min_count = min(class_counts[c] for c in cls_idxs)
+                    ratio     = median_count / min_count
+                    image_weights.append(float(min(ratio, max_ratio)))
+
+            sampler = WeightedRandomSampler(image_weights, num_samples=len(image_weights), replacement=True)
+            return DataLoader(
+                dataset,
+                batch_size=batch_size,
+                sampler=sampler,
+                num_workers=workers,
+                pin_memory=True,
+                collate_fn=dataset.collate_fn,
+            )
+
+        # val / test: standard loader
+        return build_dataloader(dataset, batch_size, workers, shuffle=False, rank=rank)
+        #DL504
+        
+
 
     def preprocess_batch(self, batch):
         """Preprocesses a batch of images by scaling and converting to float."""
