@@ -1,7 +1,5 @@
 # UrbanEye: Smart Surveillance for Cleaner Cityscapes
 
-# [Deep Learning Project] UrbanEye: Smart Surveillance for Cleaner Cityscapes
-
 ## Introduction
 Learning and computer vision technologies presents a promising avenue for automating detection and classification tasks in urban environments, enabling more efficient and scalable solutions.
 
