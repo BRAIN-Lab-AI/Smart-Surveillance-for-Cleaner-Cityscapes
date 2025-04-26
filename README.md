@@ -102,7 +102,7 @@ The workflow of the enhanced YOLOv11-based framework is designed to efficiently 
     pip install .
     ```
    
-3. **Run Preprocessing pipline:**
+3. **Downlad dataset & Run Preprocessing pipline:**
     ```bash
     jupyter preprocessing_dataset.ipynb
     ```
