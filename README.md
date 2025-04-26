@@ -1,117 +1,113 @@
-# Smart Surveillance for Cleaner Cityscapes
+# UrbanEye: Smart Surveillance for Cleaner Cityscapes
 
-Below is a template for another sample project. Please follow this template.
-# [Deep Learning Project Template] Enhanced Stable Diffusion: A Deep Learning Approach for Artistic Image Generation
+# [Deep Learning Project] UrbanEye: Smart Surveillance for Cleaner Cityscapes
 
 ## Introduction
-Enhanced Stable Diffusion is a cutting-edge deep learning project that redefines artistic image generation by leveraging an advanced diffusion process to convert textual descriptions into high-quality images. By integrating a modified UNet architecture with innovative loss functions and enhanced data augmentation strategies, the model iteratively refines a latent noise vector conditioned on text embeddings to produce detailed and visually compelling artwork. This approach not only addresses common challenges such as slow inference times and output inconsistencies found in traditional diffusion models, but also pushes the boundaries of creative image synthesis, paving the way for novel applications in art, design, and multimedia content creation.
+This project aims to address these practical needs by developing a robust object detection model tailored for urban scene analysis. The task involves significant challenges such that variations in lighting conditions, image quality inconsistencies, object occlusion, and a diverse range of issues—from potholes to graffiti—demanding a sophisticated system capable of handling real-world complexities. Leveraging the YOLOv11 architecture, we investigate its ability to create a multi-class detection pipeline that accurately identifies and classifies various urban street issues.
 
 ## Project Metadata
 ### Authors
-- **Team:** Mohammad Ahmad, Umar Abdullah and Malik Hussain
+- **Team:** HUSSAIN ALSHABAAN, ABDULLAH M AL-AWLAQI, RAYAN ALSUBHI
 - **Supervisor Name:** Dr. Muzammil Behzad
-- **Affiliations:** SABIC, ARAMCO and KFUPM
+- **Affiliations:** KFUPM
 
 ### Project Documents
 - **Presentation:** [Project Presentation](/presentation.pptx)
 - **Report:** [Project Report](/report.pdf)
 
 ### Reference Paper
-- [High-Resolution Image Synthesis with Latent Diffusion Models](https://arxiv.org/abs/2112.10752)
+- [Visual Pollution Prediction Framework Based on a Deep Active Learning Approach Using Public Road Images](https://www.mdpi.com/2227-7390/11/1/186)
 
 ### Reference Dataset
-- [LAION-5B Dataset](https://laion.ai/blog/laion-5b/)
+- [SDAIA Smartathon](https://drive.google.com/file/d/1ULqYtd9yomeGz53WBhgRdPRFB37ppeDU/view)
 
 
 ## Project Technicalities
 
 ### Terminologies
-- **Diffusion Model:** A generative model that progressively transforms random noise into coherent data.
-- **Latent Space:** A compressed, abstract representation of data where complex features are captured.
-- **UNet Architecture:** A neural network with an encoder-decoder structure featuring skip connections for better feature preservation.
-- **Text Encoder:** A model that converts text into numerical embeddings for downstream tasks.
-- **Perceptual Loss:** A loss function that measures high-level differences between images, emphasizing perceptual similarity.
-- **Tokenization:** The process of breaking down text into smaller units (tokens) for processing.
-- **Noise Vector:** A randomly generated vector used to initialize the diffusion process in generative models.
-- **Decoder:** A network component that transforms latent representations back into image space.
-- **Iterative Refinement:** The process of gradually improving the quality of generated data through multiple steps.
-- **Conditional Generation:** The process where outputs are generated based on auxiliary inputs, such as textual descriptions.
+- **YOLOv11:** A CNN-based single-stage object detection model optimized for real-time inference with high accuracy.
+- **Synthetic Data Generation:** The creation of artificial images to balance datasets and improve minority class representation.
+- **Class-Weighted Loss:** A modified loss function that assigns different weights to each class based on the dataset distribution.
+- **Data Augmentation:** Techniques used to artificially expand the dataset by applying transformations such as rotation, scaling, and flipping.
+- **Bounding Box:** A rectangular region used to localize and classify objects in an image.
+- **IoU (Intersection over Union):** A metric that measures the overlap between the predicted and ground truth bounding boxes.
+- **Early Stopping:** A training strategy where model training is halted once performance on the validation set no longer improves.
+- **Recall:** A metric measuring the ability of a model to find all relevant instances in the dataset.
+- **Precision:** A metric measuring how many of the model’s positive predictions were actually correct.
+- **Dynamic Augmentation:** Adaptive augmentation strategies that vary depending on the dataset's class distribution and complexity.
 
 ### Problem Statements
-- **Problem 1:** Achieving high-resolution and detailed images using conventional diffusion models remains challenging.
-- **Problem 2:** Existing models suffer from slow inference times during the image generation process.
-- **Problem 3:** There is limited capability in performing style transfer and generating diverse artistic variations.
+- **Problem 1:** Severe class imbalance in visual pollution datasets leads to biased model training and poor detection of minority classes.
+- **Problem 2:** Traditional augmentation and training strategies fail to generalize across varying environmental conditions (e.g., lighting, weather).
+- **Problem 3:** Conventional loss functions treat all classes equally, causing underrepresentation of rare or critical pollution types during optimization.
 
 ### Loopholes or Research Areas
-- **Evaluation Metrics:** Lack of robust metrics to effectively assess the quality of generated images.
-- **Output Consistency:** Inconsistencies in output quality when scaling the model to higher resolutions.
-- **Computational Resources:** Training requires significant GPU compute resources, which may not be readily accessible.
+- **Data Diversity:** Limited diversity in public road images impacts the model’s ability to generalize to unseen environments.
+- **Class Sensitivity:** Inadequate attention to minority class detection reduces model reliability for comprehensive pollution monitoring.
+- **Real-World Robustness:** Models trained on uniform conditions may perform poorly under real-world variations like nighttime or rainy scenes.
 
-### Problem vs. Ideation: Proposed 3 Ideas to Solve the Problems
-1. **Optimized Architecture:** Redesign the model architecture to improve efficiency and balance image quality with faster inference.
-2. **Advanced Loss Functions:** Integrate novel loss functions (e.g., perceptual loss) to better capture artistic nuances and structural details.
-3. **Enhanced Data Augmentation:** Implement sophisticated data augmentation strategies to improve the model’s robustness and reduce overfitting.
+### Problem vs. Ideation:
+1. **Dynamic Synthetic Data Generation:** Generate synthetic images per class based on dataset statistics to balance minority classes and enrich the dataset.
+2. **Customized Class-Weighted Loss Function:** Modify the loss function to dynamically adjust the contribution of each class during training, improving minority class sensitivity.
+3. **Enhanced Data Augmentation Pipeline:** Apply a diverse set of augmentation techniques tailored to simulate real-world environmental variances (e.g., brightness changes, occlusion).
+
 
 ### Proposed Solution: Code-Based Implementation
-This repository provides an implementation of the enhanced stable diffusion model using PyTorch. The solution includes:
+This repository provides an implementation of the enhanced YOLOv11-based visual pollution detection framework using PyTorch. The solution includes:
 
-- **Modified UNet Architecture:** Incorporates residual connections and efficient convolutional blocks.
-- **Novel Loss Functions:** Combines Mean Squared Error (MSE) with perceptual loss to enhance feature learning.
-- **Optimized Training Loop:** Reduces computational overhead while maintaining performance.
+- **Synthetic Data Generation Module:** Dynamically generates additional training samples to balance class distributions.
+- **Customized Loss Function:** Integrates a class-weighted Binary Cross-Entropy (BCE) loss to emphasize minority class learning during training.
+- **Enhanced Data Augmentation Pipeline:** Applies advanced augmentation techniques, including random brightness shifts, rotations, and weather-based effects.
+- **Optimized Training Strategy:** Incorporates early stopping and learning rate scheduling to maximize training efficiency and prevent overfitting.
+
 
 ### Key Components
-- **`model.py`**: Contains the modified UNet architecture and other model components.
-- **`train.py`**: Script to handle the training process with configurable parameters.
-- **`utils.py`**: Utility functions for data processing, augmentation, and metric evaluations.
-- **`inference.py`**: Script for generating images using the trained model.
+- **`preprocessing_data2.ipynb`**: Handles preprocessing of the UrbanEye dataset.
+- **`workspace2.ipynb`**: Contains experiment runs and post-training outputs.
+- **`ultralytics/cfg`**: Contains yaml based configuration files for YOLOv11 setup.
+- **`DL504`**: Contains generated models and previous training runs.
 
 ## Model Workflow
-The workflow of the Enhanced Stable Diffusion model is designed to translate textual descriptions into high-quality artistic images through a multi-step diffusion process:
+The workflow of the enhanced YOLOv11-based framework is designed to efficiently detect and localize various types of visual pollution from public road images through a structured data-centric and training-centric process:
 
 1. **Input:**
-   - **Text Prompt:** The model takes a text prompt (e.g., "A surreal landscape with mountains and rivers") as the primary input.
-   - **Tokenization:** The text prompt is tokenized and processed through a text encoder (such as a CLIP model) to obtain meaningful embeddings.
-   - **Latent Noise:** A random latent noise vector is generated to initialize the diffusion process, which is then conditioned on the text embeddings.
+   - **Image Input:** The model receives road or urban environment images as input for visual pollution detection.
+   - **Data Augmentation:** During training, input images undergo dynamic augmentation techniques such as random scaling, brightness adjustment, and rotation to improve model robustness.
+   - **Synthetic Data Generation:** Additional synthetic images are introduced to balance underrepresented classes based on dataset statistics.
 
-2. **Diffusion Process:**
-   - **Iterative Refinement:** The conditioned latent vector is fed into a modified UNet architecture. The model iteratively refines this vector by reversing a diffusion process, gradually reducing noise while preserving the text-conditioned features.
-   - **Intermediate States:** At each step, intermediate latent representations are produced that increasingly capture the structure and details dictated by the text prompt.
+2. **Training Process:**
+   - **Feature Extraction and Detection:** The input images are processed through the YOLOv11 architecture, where convolutional layers extract hierarchical features, and detection heads predict object bounding boxes and class probabilities.
+   - **Customized Loss Computation:** A class-weighted Binary Cross-Entropy (BCE) loss function is applied, dynamically adjusting the loss contributions according to class frequencies to handle class imbalance.
+   - **Model Optimization:** Early stopping and learning rate scheduling are utilized to optimize training efficiency and prevent overfitting, ensuring the model generalizes well across different visual pollution types.
 
 3. **Output:**
-   - **Decoding:** The final refined latent representation is passed through a decoder (often part of a Variational Autoencoder setup) to generate the final image.
-   - **Generated Image:** The output is a synthesized image that visually represents the input text prompt, complete with artistic style and detail.
+   - **Bounding Box Predictions:** The model outputs bounding boxes with associated class labels (e.g., graffiti, potholes, garbage) and confidence scores.
+   - **Detection Results:** The final output consists of accurately localized and classified instances of visual pollution, ready for further use in urban monitoring or environmental management systems.
+
 
 ## How to Run the Code
 
 1. **Clone the Repository:**
     ```bash
-    git clone https://github.com/yourusername/enhanced-stable-diffusion.git
-    cd enhanced-stable-diffusion
+    git clone https://github.com/BRAIN-Lab-AI/Smart-Surveillance-for-Cleaner-Cityscapes.git
+    cd Smart-Surveillance-for-Cleaner-Cityscapes
     ```
 
 2. **Set Up the Environment:**
-    Create a virtual environment and install the required dependencies.
+    It is advised to use VScode and connect to a virtual server as the training process is both CPU and GPU-intensive.
+   
+2. **Run Preprocessing pipline**
     ```bash
-    python3 -m venv venv
-    source venv/bin/activate  # On Windows use: venv\Scripts\activate
-    pip install -r requirements.txt
+    jupyter preprocessing_data2.ipynb
     ```
-
-3. **Train the Model:**
-    Configure the training parameters in the provided configuration file and run:
+4. **Train the Model:**
     ```bash
-    python train.py --config configs/train_config.yaml
-    ```
-
-4. **Generate Images:**
-    Once training is complete, use the inference script to generate images.
-    ```bash
-    python inference.py --checkpoint path/to/checkpoint.pt --input "A surreal landscape with mountains and rivers"
+    jupyter workspace2.ipynb
     ```
 
 ## Acknowledgments
-- **Open-Source Communities:** Thanks to the contributors of PyTorch, Hugging Face, and other libraries for their amazing work.
-- **Individuals:** Special thanks to bla, bla, bla for the amazing team effort, invaluable guidance and support throughout this project.
-- **Resource Providers:** Gratitude to ABC-organization for providing the computational resources necessary for this project.
+- **Open-Source Communities:** Thanks to the contributors of Python, YOLO, PyTorch, and other libraries for their great work.
+- **Individuals:** Special thanks to Dr. Behzad for invaluable guidance and support throughout this project.
+- **Resource Providers:** Gratitude to Visa for allowing us to rent resources from ``vast.ai`` using our own money.
 
 
