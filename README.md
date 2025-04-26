@@ -3,7 +3,10 @@
 # [Deep Learning Project] UrbanEye: Smart Surveillance for Cleaner Cityscapes
 
 ## Introduction
+Learning and computer vision technologies presents a promising avenue for automating detection and classification tasks in urban environments, enabling more efficient and scalable solutions.
+
 This project aims to address these practical needs by developing a robust object detection model tailored for urban scene analysis. The task involves significant challenges such that variations in lighting conditions, image quality inconsistencies, object occlusion, and a diverse range of issues—from potholes to graffiti—demanding a sophisticated system capable of handling real-world complexities. Leveraging the YOLOv11 architecture, we investigate its ability to create a multi-class detection pipeline that accurately identifies and classifies various urban street issues.
+
 
 ## Project Metadata
 ### Authors
@@ -62,9 +65,9 @@ This repository provides an implementation of the enhanced YOLOv11-based visual 
 
 
 ### Key Components
-- **`preprocessing_data2.ipynb`**: Handles preprocessing of the UrbanEye dataset.
-- **`workspace2.ipynb`**: Contains experiment runs and post-training outputs.
-- **`ultralytics/cfg`**: Contains yaml based configuration files for YOLOv11 setup.
+- **`preprocessing_dataset.ipynb`**: Handles preprocessing of the UrbanEye dataset.
+- **`training_validation_testing.ipynb`**: Contains experiment runs and post-training outputs.
+- **`ultralytics/cfg`**: Contains yaml based configuration files for YOLOv11 setup and dataset configuration.
 - **`DL504`**: Contains generated models and previous training runs.
 
 ## Model Workflow
@@ -94,20 +97,24 @@ The workflow of the enhanced YOLOv11-based framework is designed to efficiently 
     ```
 
 2. **Set Up the Environment:**
-    It is advised to use VScode and connect to a virtual server as the training process is both CPU and GPU-intensive.
+    It is advised to use VScode and connect to a virtual server as the training process is both CPU and GPU-intensive. Also, install the dependecies (pyproject.toml)
+    ``` 
+    pip install .
+    ```
    
-2. **Run Preprocessing pipline**
+3. **Run Preprocessing pipline:**
     ```bash
-    jupyter preprocessing_data2.ipynb
+    jupyter preprocessing_dataset.ipynb
     ```
 4. **Train the Model:**
     ```bash
-    jupyter workspace2.ipynb
+    jupyter raining_validation_testing.ipynb
     ```
 
 ## Acknowledgments
+This project is built on top of [YOLOv11](https://github.com/ultralytics/ultralytics), developed by [Ultralytics](https://ultralytics.com/)
 - **Open-Source Communities:** Thanks to the contributors of Python, YOLO, PyTorch, and other libraries for their great work.
 - **Individuals:** Special thanks to Dr. Behzad for invaluable guidance and support throughout this project.
-- **Resource Providers:** Gratitude to Visa for allowing us to rent resources from ``vast.ai`` using our own money.
+- **Resource Providers:** Gratitude to Visa & StcPay for allowing us to rent resources from ``vast.ai`` using our own money.
 
 
