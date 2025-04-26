@@ -154,7 +154,7 @@ class KeypointLoss(nn.Module):
         return (kpt_loss_factor.view(-1, 1) * ((1 - torch.exp(-e)) * kpt_mask)).mean()
 
 
-class v8DetectionLoss:
+class v8DetectionLoss_temp:
     """Criterion class for computing training losses."""
 
     def __init__(self, model, tal_topk=10):  # model must be de-paralleled
@@ -273,7 +273,7 @@ class v8DetectionLoss:
 
         return loss.sum() * batch_size, loss.detach()  # loss(box, cls, dfl)
 
-class v8DetectionLoss_Old:
+class v8DetectionLoss:
     """Criterion class for computing training losses."""
 
     def __init__(self, model, tal_topk=10):  # model must be de-paralleled
