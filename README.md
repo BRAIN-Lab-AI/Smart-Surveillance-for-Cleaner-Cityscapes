@@ -1,5 +1,8 @@
 # UrbanEye: Smart Surveillance for Cleaner Cityscapes
 
+![image](https://github.com/user-attachments/assets/7ea72bc8-a23b-4240-b904-95570b258718)
+
+
 ## Introduction
 Learning and computer vision technologies presents a promising avenue for automating detection and classification tasks in urban environments, enabling more efficient and scalable solutions.
 
